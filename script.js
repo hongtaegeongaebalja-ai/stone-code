@@ -4,86 +4,110 @@ const runBtn = document.getElementById("runBtn");
 const saveBtn = document.getElementById("saveBtn");
 const output = document.getElementById("output");
 
-const examples = {
-  python: 'print("hello world")',
-  javascript: 'console.log("hello world");',
-  java: 'public class Main {\n  public static void main(String[] args) {\n    System.out.println("hello world");\n  }\n}',
-  cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << "hello world" << endl;\n  return 0;\n}',
-  c: '#include <stdio.h>\n\nint main() {\n  printf("hello world\\n");\n  return 0;\n}',
-  csharp: 'using System;\n\nclass Program {\n  static void Main() {\n    Console.WriteLine("hello world");\n  }\n}',
-  php: '<?php\necho "hello world";\n?>',
-  ruby: 'puts "hello world"',
-  go: 'package main\n\nimport "fmt"\n\nfunc main() {\n  fmt.Println("hello world")\n}',
-  rust: 'fn main() {\n  println!("hello world");\n}',
-  kotlin: 'fun main() {\n  println("hello world")\n}',
-  swift: 'print("hello world")'
-};
+const errorHints = [
+  {
+    check: /SyntaxError|Unexpected token|Unexpected end/i,
+    msg: "문법 오류입니다. 괄호, 따옴표, 세미콜론, 중괄호가 빠졌는지 확인하세요."
+  },
+  {
+    check: /ReferenceError|is not defined/i,
+    msg: "없는 변수나 함수를 사용했습니다. 이름이 정확한지 확인하세요."
+  },
+  {
+    check: /TypeError/i,
+    msg: "자료형 오류입니다. 숫자/문자/배열/객체를 잘못 사용했을 수 있습니다."
+  },
+  {
+    check: /Cannot read properties|null|undefined/i,
+    msg: "비어 있는 값(null/undefined)을 사용했습니다. 값이 존재하는지 확인하세요."
+  },
+  {
+    check: /IndentationError/i,
+    msg: "파이썬 들여쓰기 오류입니다. 공백 간격을 맞춰보세요."
+  },
+  {
+    check: /NameError/i,
+    msg: "파이썬에서 없는 변수나 함수를 사용했습니다."
+  }
+];
 
-const extensions = {
-  python: "main.py",
-  javascript: "script.js",
-  java: "Main.java",
-  cpp: "main.cpp",
-  c: "main.c",
-  csharp: "Program.cs",
-  php: "index.php",
-  ruby: "main.rb",
-  go: "main.go",
-  rust: "main.rs",
-  kotlin: "Main.kt",
-  swift: "main.swift"
-};
+function explainError(errorText) {
+  const found = errorHints.find(item => item.check.test(errorText));
+  return found ? found.msg : "정확한 원인은 알 수 없지만 코드 문법이나 변수 이름을 확인해보세요.";
+}
 
-language.addEventListener("change", () => {
-  editor.value = examples[language.value] || "";
-  localStorage.setItem("language", language.value);
-});
+runBtn.addEventListener("click", () => {
+  const code = editor.value;
+  const lang = language.value;
 
-editor.addEventListener("input", () => {
-  localStorage.setItem("code", editor.value);
-});
-
-runBtn.addEventListener("click", async () => {
   output.textContent = "Running...";
 
   try {
-    const response = await fetch("http://localhost:3000/run", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        language: language.value,
-        code: editor.value
-      })
-    });
+    if (lang === "javascript") {
+      let logs = [];
+      const oldLog = console.log;
 
-    const data = await response.json();
+      console.log = (...args) => {
+        logs.push(args.join(" "));
+      };
 
+      try {
+        const result = new Function(code)();
+        console.log = oldLog;
+
+        output.textContent =
+          logs.length > 0
+            ? logs.join("\n")
+            : result !== undefined
+            ? String(result)
+            : "실행 완료. 출력값은 없습니다.";
+      } catch (err) {
+        console.log = oldLog;
+
+        output.textContent =
+          "❌ 오류 발생\n\n" +
+          err.name + ": " + err.message +
+          "\n\n왜 오류났나요?\n" +
+          explainError(err.name + " " + err.message);
+      }
+    } else {
+      output.textContent =
+        "⚠️ 현재 브라우저에서는 JavaScript만 직접 실행할 수 있습니다.\n\n" +
+        lang +
+        " 코드는 서버 실행 기능을 연결해야 실제 실행됩니다.";
+    }
+  } catch (err) {
     output.textContent =
-      data.output ||
-      data.error ||
-      "No output";
-  } catch (error) {
-    output.textContent =
-      "Server is not running.\n\nOpen terminal and run:\nnode server.js";
+      "❌ 알 수 없는 오류\n\n" +
+      err.message +
+      "\n\n왜 오류났나요?\n" +
+      explainError(err.message);
   }
 });
 
 saveBtn.addEventListener("click", () => {
-  const fileName = extensions[language.value] || "code.txt";
-  const blob = new Blob([editor.value], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
+  const code = editor.value;
+  const lang = language.value;
 
+  const extensions = {
+    python: "py",
+    javascript: "js",
+    java: "java",
+    cpp: "cpp",
+    c: "c",
+    csharp: "cs",
+    php: "php",
+    ruby: "rb",
+    go: "go",
+    rust: "rs",
+    kotlin: "kt",
+    swift: "swift"
+  };
+
+  const blob = new Blob([code], { type: "text/plain" });
   const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
+  a.href = URL.createObjectURL(blob);
+  a.download = `code.${extensions[lang] || "txt"}`;
   a.click();
-
-  URL.revokeObjectURL(url);
-});
-
-window.addEventListener("load", () => {
-  language.value = localStorage.getItem("language") || "python";
-  editor.value = localStorage.getItem("code") || examples[language.value];
+  URL.revokeObjectURL(a.href);
 });
