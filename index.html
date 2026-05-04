@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stone code</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>stone code</h1>
+      <p>Run code in many languages</p>
+    </header>
+
+    <section class="toolbar">
+      <select id="language">
+        <option value="python">Python</option>
+        <option value="javascript">JavaScript</option>
+        <option value="java">Java</option>
+        <option value="cpp">C++</option>
+        <option value="c">C</option>
+        <option value="csharp">C#</option>
+        <option value="php">PHP</option>
+        <option value="ruby">Ruby</option>
+        <option value="go">Go</option>
+        <option value="rust">Rust</option>
+        <option value="kotlin">Kotlin</option>
+        <option value="swift">Swift</option>
+      </select>
+
+      <button id="runBtn">Run</button>
+      <button id="saveBtn">Save File</button>
+    </section>
+
+    <main class="workspace">
+      <section class="panel">
+        <div class="panel-title">Editor</div>
+        <textarea id="codeEditor" spellcheck="false">print("hello world")</textarea>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">Output</div>
+        <pre id="output">Press Run</pre>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
