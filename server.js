@@ -6,6 +6,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("Stone Code server is running");
+});
+
 const languageMap = {
   python: 71,
   javascript: 63,
@@ -33,17 +37,20 @@ app.post("/run", async (req, res) => {
   }
 
   try {
-    const response = await fetch("https://ce.judge0.com/submissions?base64_encoded=false&wait=true", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        source_code: code,
-        language_id: languageId,
-        stdin: ""
-      })
-    });
+    const response = await fetch(
+      "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          source_code: code,
+          language_id: languageId,
+          stdin: ""
+        })
+      }
+    );
 
     const result = await response.json();
 
@@ -55,7 +62,6 @@ app.post("/run", async (req, res) => {
         result.message ||
         "Done."
     });
-
   } catch (error) {
     res.json({
       error: "Code execution failed."
@@ -63,6 +69,8 @@ app.post("/run", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("CodeRun server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`CodeRun server running on port ${PORT}`);
 });
