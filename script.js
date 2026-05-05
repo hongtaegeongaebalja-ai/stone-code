@@ -5,7 +5,7 @@ const saveBtn = document.getElementById("saveBtn");
 const output = document.getElementById("output");
 
 // 🔥 여기 나중에 Render 주소 넣기
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "https://stone-code-l1dh.onrender.com";
 // 예: const SERVER_URL = "https://your-server.onrender.com";
 
 // ✔️ 언어별 기본 코드
